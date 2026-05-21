@@ -1,0 +1,14 @@
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+.env
+.env.*
+node_modules/
+vendor/
+.idea/
+.vscode/
+error_log
+.ftpquota
+*.sql
+*.sql.gz

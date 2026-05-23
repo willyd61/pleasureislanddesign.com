@@ -1,0 +1,20 @@
+{
+  "extends": "stylelint-config-standard",
+  "rules": {
+    "selector-list-comma-newline-after": "always-multi-line",
+    "declaration-block-trailing-semicolon": "always",
+    "no-descending-specificity": "warning",
+    "font-family-no-missing-generic-family-keyword": "warning",
+    "at-rule-no-unknown": [
+      true,
+      {
+        "ignoreAtRules": [
+          "media"
+        ]
+      }
+    ],
+    "color-hex-length": "short",
+    "indentation": 2,
+    "max-nesting-depth": 4
+  }
+}

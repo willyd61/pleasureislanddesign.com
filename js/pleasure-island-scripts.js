@@ -424,9 +424,9 @@
       new FormData(form).forEach((val, key) => { data[key] = val; });
 
       try {
-        const res = await fetch('https://formspree.io/f/pleasureislanddesign@gmail.com', {
+        const res = await fetch('/forms/contact.php', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
 
@@ -472,10 +472,10 @@
       msg.textContent = 'Subscribing…';
 
       try {
-        const res = await fetch('https://formspree.io/f/pleasureislanddesign@gmail.com', {
+        const res = await fetch('/forms/newsletter.php', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({ email, _subject: 'Newsletter Signup' })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
         });
 
         if (res.ok) {

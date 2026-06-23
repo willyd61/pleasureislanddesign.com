@@ -2250,3 +2250,285 @@ address { font-style: normal; }
 @media (max-width: 900px) {
   .service-area-grid { grid-template-columns: 1fr; }
 }
+
+
+/* ================================================================
+   PHASE 3: CUTTING-EDGE ENHANCEMENTS
+   Advanced animations, effects, and performance optimizations
+   ================================================================ */
+
+/* ---- Smooth Scroll & Performance ---- */
+@supports (scroll-behavior: smooth) {
+  html { scroll-behavior: smooth; }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---- Advanced Gradient Backgrounds ---- */
+.gradient-overlay {
+  background: linear-gradient(135deg, var(--pid-navy) 0%, var(--pid-navy-dark) 50%, var(--pid-sage-dark) 100%);
+  position: relative;
+}
+
+.gradient-premium {
+  background: linear-gradient(
+    120deg,
+    var(--pid-gold) 0%,
+    var(--pid-sage-light) 50%,
+    var(--pid-navy) 100%
+  );
+  background-size: 200% 200%;
+  animation: gradientFlow 15s ease infinite;
+}
+
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ---- Glassmorphism Effects ---- */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg);
+}
+
+.glass-effect-dark {
+  background: rgba(15, 30, 48, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(196, 151, 59, 0.2);
+}
+
+/* ---- Enhanced Hover Effects ---- */
+.lift-on-hover {
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.lift-on-hover:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 50px rgba(30, 58, 95, 0.2);
+}
+
+.scale-on-hover {
+  transition: transform var(--transition-base);
+}
+
+.scale-on-hover:hover {
+  transform: scale(1.05);
+}
+
+/* ---- Text Effects ---- */
+.text-gradient {
+  background: linear-gradient(120deg, var(--pid-gold), var(--pid-sage-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.text-shadow-premium {
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(0, 0, 0, 0.15),
+    0 20px 40px rgba(196, 151, 59, 0.1);
+}
+
+/* ---- Card Enhancements ---- */
+.card-premium {
+  background: var(--pid-white);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  border: 1px solid rgba(196, 151, 59, 0.1);
+  box-shadow: 0 10px 40px rgba(30, 58, 95, 0.08);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.card-premium::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--pid-gold), var(--pid-sage), var(--pid-gold));
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.card-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(30, 58, 95, 0.12);
+  border-color: rgba(196, 151, 59, 0.2);
+}
+
+.card-premium:hover::before {
+  opacity: 1;
+  animation: slideGradient 2s ease infinite;
+}
+
+@keyframes slideGradient {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+/* ---- Image Enhancements ---- */
+.image-reveal {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+}
+
+.image-reveal img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.image-reveal:hover img {
+  transform: scale(1.08);
+}
+
+/* Overlay effect */
+.image-reveal::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(196, 151, 59, 0) 0%,
+    rgba(15, 30, 48, 0.1) 100%
+  );
+  pointer-events: none;
+  border-radius: var(--radius-lg);
+}
+
+/* ---- Button Enhancements ---- */
+.btn-modern {
+  position: relative;
+  overflow: hidden;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.btn-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: left var(--transition-base);
+  z-index: -1;
+}
+
+.btn-modern:hover::before {
+  left: 100%;
+}
+
+.btn-modern:active {
+  transform: scale(0.98);
+}
+
+/* ---- Loading Animation ---- */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+
+/* ---- Border Animation ---- */
+.border-animated {
+  position: relative;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.border-animated::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(90deg, var(--pid-gold), var(--pid-sage), var(--pid-gold));
+  border-radius: var(--radius-lg);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  z-index: -1;
+}
+
+.border-animated:hover::before {
+  opacity: 1;
+}
+
+/* ---- Performance: Will-change hints ---- */
+.animate-on-scroll {
+  will-change: transform, opacity;
+}
+
+/* ---- Smooth color transitions ---- */
+.color-transition {
+  transition: color var(--transition-base), background-color var(--transition-base), border-color var(--transition-base);
+}
+
+/* ---- Code blocks and pre-formatted text ---- */
+pre, code {
+  background: var(--pid-navy-dark);
+  color: var(--pid-sage-light);
+  border-radius: var(--radius-sm);
+  font-family: Monaco, 'Courier New', monospace;
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+code {
+  padding: 2px 6px;
+  display: inline-block;
+}
+
+pre {
+  padding: var(--space-4);
+  overflow-x: auto;
+  margin: var(--space-4) 0;
+}
+
+
+/* ---- Dark mode support (future) ---- */
+@media (prefers-color-scheme: dark) {
+  /* Future dark mode variables can be added here */
+}
+
+/* ---- High contrast mode support ---- */
+@media (prefers-contrast: more) {
+  :root {
+    --pid-navy: #0a1929;
+    --pid-navy-dark: #020a15;
+    --pid-gold: #e6c200;
+  }
+}

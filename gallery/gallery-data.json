@@ -1,0 +1,133 @@
+{
+  "projects": [
+    {
+      "id": "brunswick-forest-2023",
+      "title": "Brunswick Forest Kitchen Transformation",
+      "location": "Brunswick Forest, Leland, NC",
+      "year": 2023,
+      "services": ["Cabinet Refinishing"],
+      "beforeImage": "gallery/brunswick-forest-2023/before_1.jpg",
+      "afterImage": "gallery/brunswick-forest-2023/after_1.jpg",
+      "testimonial": "Nicole transformed our kitchen beyond our expectations. The attention to detail was remarkable.",
+      "testimonialAuthor": "Sarah M.",
+      "turnaroundDays": 7,
+      "style": "transitional",
+      "featured": true
+    },
+    {
+      "id": "compass-pointe-2023",
+      "title": "Compass Pointe Cabinet Refinishing",
+      "location": "Compass Pointe, Leland, NC",
+      "year": 2023,
+      "services": ["Cabinet Refinishing"],
+      "beforeImage": "gallery/compass-pointe-2023/before-1.jpg",
+      "afterImage": "gallery/compass-pointe-2023/compess_pointe_after.jpg",
+      "testimonial": "Professional results, not a painting crew. We trusted Nicole completely.",
+      "testimonialAuthor": "James R.",
+      "turnaroundDays": 6,
+      "style": "modern",
+      "featured": true
+    },
+    {
+      "id": "seagrove-2023",
+      "title": "Seagrove Kitchen Refinish",
+      "location": "Seagrove, Kure Beach, NC",
+      "year": 2023,
+      "services": ["Cabinet Refinishing"],
+      "beforeImage": "gallery/seagrove-2023/before-1.jpg",
+      "afterImage": "gallery/seagrove-2023/after-1.jpg",
+      "testimonial": "The transformation was achieved at a fraction of the cost of new cabinets.",
+      "testimonialAuthor": "Allison B.",
+      "turnaroundDays": 8,
+      "style": "coastal",
+      "featured": true
+    },
+    {
+      "id": "motts-landing-2023",
+      "title": "Motts Landing Cabinet Transformation",
+      "location": "Motts Landing, Wilmington, NC",
+      "year": 2023,
+      "services": ["Cabinet Refinishing"],
+      "beforeImage": "gallery/motts-landing-2023/before-1.jpg",
+      "afterImage": "gallery/motts-landing-2023/after-1.jpg",
+      "testimonial": "Absolutely Pleasure Island Design! The results speak for themselves.",
+      "testimonialAuthor": "Roger",
+      "turnaroundDays": 7,
+      "style": "traditional",
+      "featured": true
+    },
+    {
+      "id": "hardware-showcase-2023",
+      "title": "Custom Hardware Installation",
+      "location": "SE North Carolina",
+      "year": 2023,
+      "services": ["Hardware Installation"],
+      "beforeImage": "",
+      "afterImage": "gallery/339112973_1158704888152281_1760510813048782737_n.jpg",
+      "testimonial": "Fresh hardware transformed the entire look of the kitchen.",
+      "testimonialAuthor": "Client",
+      "turnaroundDays": 2,
+      "style": "modern",
+      "featured": false
+    },
+    {
+      "id": "white-refinish-2023",
+      "title": "White Cabinet Refinishing",
+      "location": "Wilmington Area, NC",
+      "year": 2023,
+      "services": ["Cabinet Refinishing"],
+      "beforeImage": "",
+      "afterImage": "gallery/321496438_3576518529290680_7318969105542027328_n.jpg",
+      "testimonial": "Beautiful bright white finish transformed the kitchen.",
+      "testimonialAuthor": "Client",
+      "turnaroundDays": 7,
+      "style": "modern",
+      "featured": false
+    },
+    {
+      "id": "premium-refinish-2023",
+      "title": "Premium Kitchen Cabinet Refinishing",
+      "location": "Carolina Beach Area, NC",
+      "year": 2023,
+      "services": ["Cabinet Refinishing"],
+      "beforeImage": "",
+      "afterImage": "gallery/6.jpg",
+      "testimonial": "Professional-grade results that exceeded expectations.",
+      "testimonialAuthor": "Client",
+      "turnaroundDays": 8,
+      "style": "transitional",
+      "featured": false
+    },
+    {
+      "id": "kure-beach-refacing-2023",
+      "title": "Cabinet Refacing Project",
+      "location": "Kure Beach, NC",
+      "year": 2023,
+      "services": ["Cabinet Refacing"],
+      "beforeImage": "",
+      "afterImage": "gallery/kure-beach-2023/337264951_788481375581709_4169773421824088250_n.jpg",
+      "testimonial": "New doors and drawer fronts gave the kitchen a completely fresh look.",
+      "testimonialAuthor": "Client",
+      "turnaroundDays": 5,
+      "style": "coastal",
+      "featured": false
+    }
+  ],
+  "meta": {
+    "totalProjects": 8,
+    "lastUpdated": "2026-06-23",
+    "serviceTypes": [
+      "Cabinet Refinishing",
+      "Cabinet Refacing",
+      "Hardware Installation",
+      "Cabinet Repair",
+      "Drawer Upgrades"
+    ],
+    "styleTypes": [
+      "Modern",
+      "Traditional",
+      "Transitional",
+      "Coastal"
+    ]
+  }
+}

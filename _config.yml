@@ -1,0 +1,47 @@
+# GitHub Pages Configuration for Pleasure Island Design
+# Enables Jekyll processing and GitHub Pages deployment
+
+# Site metadata
+title: Pleasure Island Design
+description: Premium Cabinet Refinishing & Repair Services in Southeast North Carolina
+url: https://pleasureislanddesign.com
+baseurl: ""
+
+# Jekyll build settings
+markdown: kramdown
+theme: null
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# Build settings
+exclude:
+  - forms/
+  - blog/
+  - .git/
+  - .gitignore
+  - node_modules/
+  - package.json
+  - package-lock.json
+  - README.md
+  - BUGFIX_1.md
+  - PHASE3_ROADMAP.md
+  - tests/
+  - docs/
+
+# Sass/SCSS settings
+sass:
+  style: compressed
+  load_paths:
+    - _sass
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
+
+# Environment
+environment: production

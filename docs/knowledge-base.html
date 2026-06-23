@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Knowledge Base — Pleasure Island Design</title>
+
+  <!-- SEO -->
+  <meta name="description" content="Complete guide to cabinet refinishing, care, maintenance, and design. Learn from Pleasure Island Design's experts.">
+  <meta name="robots" content="index, follow">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="../styles.css">
+  <style>
+    .kb-section {
+      padding: clamp(4rem, 8vw, 7rem) 0;
+    }
+
+    .kb-hero {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto var(--space-16);
+    }
+
+    .kb-categories {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--space-8);
+      margin: var(--space-16) 0;
+    }
+
+    .kb-category {
+      background: var(--pid-white);
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      box-shadow: var(--shadow-sm);
+      border-top: 4px solid var(--pid-gold);
+      transition: all var(--transition-base);
+    }
+
+    .kb-category:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .kb-category h3 {
+      font-family: var(--font-display);
+      font-size: var(--text-xl);
+      color: var(--pid-navy);
+      margin-bottom: var(--space-4);
+    }
+
+    .kb-category ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .kb-category li {
+      padding: var(--space-2) 0;
+      border-bottom: 1px solid var(--pid-cream-dark);
+    }
+
+    .kb-category li:last-child {
+      border-bottom: none;
+    }
+
+    .kb-category a {
+      color: var(--pid-sage-dark);
+      font-weight: 600;
+      text-decoration: none;
+      transition: color var(--transition-fast);
+    }
+
+    .kb-category a:hover {
+      color: var(--pid-navy);
+    }
+
+    .kb-embed {
+      margin: var(--space-16) 0;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .kb-embed iframe {
+      width: 100%;
+      height: 800px;
+      border: none;
+    }
+
+    @media (max-width: 768px) {
+      .kb-embed iframe {
+        height: 600px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="site-header" id="site-header">
+    <div class="header-inner">
+      <a href="/" class="header-logo" aria-label="Pleasure Island Design — Home">
+        <img src="../img/pid-logo-primary-transparent.png" alt="Pleasure Island Design" width="220" height="95">
+      </a>
+      <nav class="primary-nav" id="primary-nav" role="navigation" aria-label="Main navigation">
+        <ul class="nav-list">
+          <li><a href="/" class="nav-link">Home</a></li>
+          <li><a href="/#services" class="nav-link">Services</a></li>
+          <li><a href="/docs/knowledge-base.html" class="nav-link active">Knowledge Base</a></li>
+          <li><a href="/#contact" class="nav-link">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Knowledge Base Hero -->
+  <section class="kb-section">
+    <div class="container">
+      <div class="kb-hero reveal">
+        <p class="section-eyebrow">Learn &amp; Explore</p>
+        <h1 class="section-title">Cabinet Refinishing <em>Knowledge Base</em></h1>
+        <p class="section-subtitle">Expert guidance on cabinet care, design trends, and the refinishing process. Powered by Pleasure Island Design.</p>
+      </div>
+
+      <!-- Categories -->
+      <div class="kb-categories">
+        <div class="kb-category reveal">
+          <h3>Getting Started</h3>
+          <ul>
+            <li><a href="#how-refinishing-works">How cabinet refinishing works</a></li>
+            <li><a href="#timeline">Project timeline</a></li>
+            <li><a href="#cost-guide">Cost & pricing guide</a></li>
+            <li><a href="#service-area">Service area</a></li>
+          </ul>
+        </div>
+
+        <div class="kb-category reveal">
+          <h3>Maintenance &amp; Care</h3>
+          <ul>
+            <li><a href="#cleaning-guide">How to clean refinished cabinets</a></li>
+            <li><a href="#products-to-avoid">Products to avoid</a></li>
+            <li><a href="#humidity-management">Humidity &amp; moisture control</a></li>
+            <li><a href="#long-term-care">Long-term care tips</a></li>
+          </ul>
+        </div>
+
+        <div class="kb-category reveal">
+          <h3>Design &amp; Styles</h3>
+          <ul>
+            <li><a href="#color-selection">Choosing the right color</a></li>
+            <li><a href="#modern-vs-traditional">Modern vs. traditional styles</a></li>
+            <li><a href="#hardware-guide">Hardware selection guide</a></li>
+            <li><a href="#trends-2026">Cabinet design trends 2026</a></li>
+          </ul>
+        </div>
+
+        <div class="kb-category reveal">
+          <h3>Troubleshooting</h3>
+          <ul>
+            <li><a href="#chipping-peeling">Chipping or peeling paint</a></li>
+            <li><a href="#color-matching">Color matching issues</a></li>
+            <li><a href="#durability-concerns">Durability questions</a></li>
+            <li><a href="#warranty-info">Warranty &amp; guarantees</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Notion Embed (placeholder) -->
+      <div class="kb-embed reveal" style="margin-top: var(--space-16);">
+        <div style="background: var(--pid-cream); border-radius: var(--radius-lg); padding: var(--space-8); text-align: center;">
+          <p style="margin: 0; color: var(--pid-text-muted);">
+            📚 <strong>Full Knowledge Base</strong><br>
+            <em>Notion wiki embed will be placed here</em><br>
+            <small>Coming soon: pleasureislanddesign.notion.site</small>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; 2026 Pleasure Island Design LLC. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="../js/pleasure-island-scripts.js" defer></script>
+</body>
+</html>

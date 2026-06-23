@@ -1,254 +1,118 @@
 <?php
 /**
- * Unit Tests for Contact & Newsletter Forms
+ * Unit Tests — exercises the REAL shared form-helpers library.
+ *
+ * Unlike the previous version, these tests `require` forms/lib/form-helpers.php
+ * and call the exact same pid_* functions used in production. If the production
+ * validation/sanitization logic changes, these tests change behaviour too.
  *
  * Run: php tests/unit-tests.php
- *
- * Tests validation, sanitization, rate limiting, and edge cases
  */
 
-define('TESTS_DIR', __DIR__);
+require_once __DIR__ . '/../forms/lib/form-helpers.php';
 
-// Test results
-$tests = [];
 $passed = 0;
 $failed = 0;
 
 echo "========================================\n";
 echo "PLEASURE ISLAND DESIGN - UNIT TESTS\n";
+echo "(testing real forms/lib/form-helpers.php)\n";
 echo "========================================\n\n";
 
-// ===== CONTACT FORM TESTS =====
-echo "[TEST SUITE] Contact Form Validation\n";
-echo str_repeat("-", 50) . "\n";
+// Sanity: confirm we actually loaded the production lib.
+assert_true(function_exists('pid_validate_contact'), 'Production lib is loaded (pid_validate_contact exists)');
+assert_true(defined('PID_FORM_HELPERS'), 'PID_FORM_HELPERS constant defined by lib');
 
-test_contact_form_valid_input();
-test_contact_form_missing_fields();
-test_contact_form_invalid_email();
-test_contact_form_message_length();
-test_contact_form_xss_prevention();
-test_contact_form_sql_injection_prevention();
+echo "\n[SUITE] pid_validate_contact()\n" . str_repeat('-', 50) . "\n";
 
-echo "\n[TEST SUITE] Newsletter Validation\n";
-echo str_repeat("-", 50) . "\n";
+// Valid input
+assert_equal(
+    count(pid_validate_contact([
+        'name' => 'John Doe', 'email' => 'john@example.com',
+        'phone' => '(910) 444-1230', 'service' => 'refinishing',
+        'message' => 'I would like to refinish my cabinets, please.'
+    ])),
+    0, 'Valid input passes with no errors'
+);
 
-test_newsletter_valid_email();
-test_newsletter_invalid_email();
-test_newsletter_duplicate_prevention();
+// Missing fields
+$errs = pid_validate_contact(['name' => 'John']);
+assert_true(isset($errs['email']), 'Missing email is caught');
+assert_true(isset($errs['message']), 'Missing message is caught');
 
-echo "\n[TEST SUITE] Email Header Injection\n";
-echo str_repeat("-", 50) . "\n";
+// Invalid email
+$errs = pid_validate_contact(['name' => 'John Doe', 'email' => 'not-an-email', 'message' => 'A valid length message.']);
+assert_true(isset($errs['email']), 'Invalid email format is caught');
 
-test_email_header_injection_prevention();
+// Name boundaries
+assert_true(isset(pid_validate_contact(['name' => 'J', 'email' => 'a@b.co', 'message' => 'Valid length message here.'])['name']), 'Name < 2 chars rejected');
+assert_true(isset(pid_validate_contact(['name' => str_repeat('a', 101), 'email' => 'a@b.co', 'message' => 'Valid length message here.'])['name']), 'Name > 100 chars rejected');
 
-echo "\n[TEST SUITE] Blog Scheduler\n";
-echo str_repeat("-", 50) . "\n";
+// Message boundaries
+assert_true(isset(pid_validate_contact(['name' => 'John Doe', 'email' => 'a@b.co', 'message' => 'short'])['message']), 'Message < 10 chars rejected');
+assert_true(isset(pid_validate_contact(['name' => 'John Doe', 'email' => 'a@b.co', 'message' => str_repeat('a', 5001)])['message']), 'Message > 5000 chars rejected');
 
-test_blog_slug_sanitization();
-test_blog_html_validation();
+// Phone format
+assert_true(isset(pid_validate_contact(['name' => 'John Doe', 'email' => 'a@b.co', 'message' => 'Valid length message here.', 'phone' => 'abc!!!'])['phone']), 'Garbage phone rejected');
+assert_equal(count(pid_validate_contact(['name' => 'John Doe', 'email' => 'a@b.co', 'message' => 'Valid length message here.', 'phone' => '+1 (910) 444-1230'])), 0, 'Well-formed phone accepted');
+
+echo "\n[SUITE] pid_validate_email()\n" . str_repeat('-', 50) . "\n";
+assert_true(pid_validate_email('user@example.com'), 'Valid email returns true');
+foreach (['not-an-email', '@example.com', 'user@', 'user @example.com', ''] as $bad) {
+    assert_false(pid_validate_email($bad), "Invalid email '{$bad}' returns false");
+}
+
+echo "\n[SUITE] pid_sanitize_email_header() — injection prevention\n" . str_repeat('-', 50) . "\n";
+$injected = "test@example.com\nBcc: attacker@example.com";
+$clean = pid_sanitize_email_header($injected);
+assert_false(strpos($clean, "\n") !== false, 'Newline stripped from email header');
+assert_false(strpos($clean, "\r") !== false, 'Carriage return stripped from email header');
+
+echo "\n[SUITE] pid_is_duplicate_email()\n" . str_repeat('-', 50) . "\n";
+assert_true(pid_is_duplicate_email('Test@Example.com', ['other@x.com', 'test@example.com']), 'Duplicate detected case-insensitively');
+assert_false(pid_is_duplicate_email('new@example.com', ['other@x.com', 'test@example.com']), 'Non-duplicate not flagged');
+assert_false(pid_is_duplicate_email('a@b.com', []), 'Empty list never duplicates');
+
+echo "\n[SUITE] pid_sanitize_ip()\n" . str_repeat('-', 50) . "\n";
+assert_equal(pid_sanitize_ip('203.0.113.7'), '203.0.113.7', 'Valid IPv4 preserved');
+assert_equal(pid_sanitize_ip('not-an-ip'), '127.0.0.1', 'Junk IP falls back to loopback');
+assert_equal(pid_sanitize_ip('::1'), '::1', 'Valid IPv6 preserved');
+
+echo "\n[SUITE] pid_sanitize_slug()\n" . str_repeat('-', 50) . "\n";
+$cases = [
+    'valid-slug' => 'valid-slug',
+    'Invalid Slug!' => 'InvalidSlug',
+    'slug-with-123' => 'slug-with-123',
+    'slug<script>' => 'slugscript',
+    '../../etc/passwd' => 'etcpasswd',
+];
+foreach ($cases as $in => $expected) {
+    assert_equal(pid_sanitize_slug($in), $expected, "Slug '{$in}' sanitized correctly");
+}
+
+echo "\n[SUITE] pid_validate_post_html()\n" . str_repeat('-', 50) . "\n";
+assert_true(pid_validate_post_html('<article><h1>Test Post</h1><p>Content</p></article>'), 'Well-formed post passes');
+assert_false(pid_validate_post_html('<article><p>No heading here</p></article>'), 'Post without <h1> rejected');
+assert_false(pid_validate_post_html('<article<h1>Broken bracket</h1>'), 'Unbalanced angle brackets rejected');
 
 // ===== RESULTS =====
-echo "\n" . str_repeat("=", 50) . "\n";
-echo "TEST RESULTS\n";
-echo str_repeat("=", 50) . "\n";
-echo "Passed: {$passed}\n";
-echo "Failed: {$failed}\n";
-echo "Total: " . ($passed + $failed) . "\n\n";
+echo "\n" . str_repeat('=', 50) . "\n";
+echo "TEST RESULTS\n" . str_repeat('=', 50) . "\n";
+echo "Passed: {$passed}\nFailed: {$failed}\nTotal: " . ($passed + $failed) . "\n\n";
+echo $failed === 0 ? "✓ All tests passed!\n" : "✗ Some tests failed.\n";
+exit($failed === 0 ? 0 : 1);
 
-if ($failed === 0) {
-    echo "✓ All tests passed!\n";
-    exit(0);
-} else {
-    echo "✗ Some tests failed. See above for details.\n";
-    exit(1);
-}
-
-// ===== TEST FUNCTIONS =====
-
-function test_contact_form_valid_input() {
-    $input = [
-        'name' => 'John Doe',
-        'email' => 'john@example.com',
-        'phone' => '(910) 444-1230',
-        'service' => 'refinishing',
-        'message' => 'I would like to refinish my cabinets.'
-    ];
-
-    $errors = validate_contact_input($input);
-    assert_equal(count($errors), 0, 'Valid input should pass validation');
-}
-
-function test_contact_form_missing_fields() {
-    $input = ['name' => 'John'];
-    $errors = validate_contact_input($input);
-    assert_true(count($errors) > 0, 'Missing fields should cause errors');
-    assert_true(isset($errors['email']), 'Missing email should be caught');
-    assert_true(isset($errors['message']), 'Missing message should be caught');
-}
-
-function test_contact_form_invalid_email() {
-    $input = [
-        'name' => 'John Doe',
-        'email' => 'not-an-email',
-        'message' => 'Test message here.'
-    ];
-    $errors = validate_contact_input($input);
-    assert_true(isset($errors['email']), 'Invalid email should be caught');
-}
-
-function test_contact_form_message_length() {
-    $input = [
-        'name' => 'John Doe',
-        'email' => 'john@example.com',
-        'message' => 'too short'
-    ];
-    $errors = validate_contact_input($input);
-    assert_true(isset($errors['message']), 'Message too short should fail');
-
-    $input['message'] = str_repeat('a', 5001);
-    $errors = validate_contact_input($input);
-    assert_true(isset($errors['message']), 'Message too long should fail');
-}
-
-function test_contact_form_xss_prevention() {
-    $malicious = '<script>alert("XSS")</script>';
-    $sanitized = htmlspecialchars($malicious, ENT_QUOTES, 'UTF-8');
-    assert_not_equal($sanitized, $malicious, 'XSS should be escaped');
-    assert_true(strpos($sanitized, '<script>') === false, 'Script tag should be escaped');
-}
-
-function test_contact_form_sql_injection_prevention() {
-    // PHP's htmlspecialchars and filter_var provide protection
-    $malicious = "'; DROP TABLE users; --";
-    $sanitized = htmlspecialchars($malicious, ENT_QUOTES, 'UTF-8');
-    assert_not_equal($sanitized, $malicious, 'SQL should be escaped');
-}
-
-function test_newsletter_valid_email() {
-    $email = 'user@example.com';
-    $valid = filter_var($email, FILTER_VALIDATE_EMAIL);
-    assert_true($valid !== false, 'Valid email should pass');
-}
-
-function test_newsletter_invalid_email() {
-    $invalid_emails = [
-        'not-an-email',
-        '@example.com',
-        'user@',
-        'user @example.com',
-        ''
-    ];
-
-    foreach ($invalid_emails as $email) {
-        $valid = filter_var($email, FILTER_VALIDATE_EMAIL);
-        assert_true($valid === false, "Invalid email '{$email}' should fail");
-    }
-}
-
-function test_newsletter_duplicate_prevention() {
-    // Simulated duplicate check
-    $email = 'test@example.com';
-    $existing = ['test@example.com', 'other@example.com'];
-    $is_duplicate = in_array(strtolower($email), array_map('strtolower', $existing));
-    assert_true($is_duplicate, 'Duplicate detection should work');
-}
-
-function test_email_header_injection_prevention() {
-    // Simulate header injection attempt
-    $malicious = "test@example.com\nBcc: attacker@example.com";
-    $safe = filter_var($malicious, FILTER_SANITIZE_EMAIL);
-    assert_true(strpos($safe, "\n") === false, 'Newlines should be removed from email');
-}
-
-function test_blog_slug_sanitization() {
-    $slugs = [
-        'valid-slug' => 'valid-slug',
-        'Invalid Slug!' => 'InvalidSlug',
-        'slug-with-123' => 'slug-with-123',
-        'slug<script>' => 'slugscript'
-    ];
-
-    foreach ($slugs as $input => $expected) {
-        $sanitized = preg_replace('/[^a-z0-9\-]/i', '', $input);
-        assert_equal($sanitized, $expected, "Slug '{$input}' should sanitize correctly");
-    }
-}
-
-function test_blog_html_validation() {
-    $valid_html = '<article><h1>Test Post</h1><p>Content</p></article>';
-    $result = validate_post_html_test($valid_html);
-    assert_true($result, 'Valid HTML should pass');
-
-    $invalid_html = '<article<h1>Missing bracket';
-    $result = validate_post_html_test($invalid_html);
-    assert_false($result, 'Unmatched angle brackets should fail');
-}
-
-// ===== ASSERTION FUNCTIONS =====
+// ===== ASSERTIONS =====
 
 function assert_equal($actual, $expected, $message) {
     global $passed, $failed;
     if ($actual === $expected) {
-        echo "✓ {$message}\n";
-        $passed++;
+        echo "✓ {$message}\n"; $passed++;
     } else {
-        echo "✗ {$message}\n";
-        echo "  Expected: " . var_export($expected, true) . "\n";
-        echo "  Actual: " . var_export($actual, true) . "\n";
+        echo "✗ {$message}\n  Expected: " . var_export($expected, true) . "\n  Actual:   " . var_export($actual, true) . "\n";
         $failed++;
     }
 }
 
-function assert_true($condition, $message) {
-    assert_equal($condition, true, $message);
-}
-
-function assert_false($condition, $message) {
-    assert_equal($condition, false, $message);
-}
-
-function assert_not_equal($actual, $expected, $message) {
-    global $passed, $failed;
-    if ($actual !== $expected) {
-        echo "✓ {$message}\n";
-        $passed++;
-    } else {
-        echo "✗ {$message}\n";
-        echo "  Should not equal: " . var_export($expected, true) . "\n";
-        $failed++;
-    }
-}
-
-// ===== MOCK VALIDATORS =====
-
-function validate_contact_input($input) {
-    $errors = [];
-    $name = trim($input['name'] ?? '');
-    $email = trim($input['email'] ?? '');
-    $message = trim($input['message'] ?? '');
-
-    if (strlen($name) < 2 || strlen($name) > 100) {
-        $errors['name'] = 'Name must be 2-100 characters';
-    }
-    if (strlen($email) < 5 || strlen($email) > 255) {
-        $errors['email'] = 'Invalid email address';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors['email'] = 'Invalid email format';
-    }
-    if (strlen($message) < 10 || strlen($message) > 5000) {
-        $errors['message'] = 'Message must be 10-5000 characters';
-    }
-
-    return $errors;
-}
-
-function validate_post_html_test($content) {
-    if (!preg_match('/<h1[^>]*>/', $content)) {
-        return false;
-    }
-    if (substr_count($content, '<') !== substr_count($content, '>')) {
-        return false;
-    }
-    return true;
-}
-?>
+function assert_true($condition, $message) { assert_equal($condition === true, true, $message); }
+function assert_false($condition, $message) { assert_equal($condition === false, true, $message); }

@@ -17,7 +17,7 @@
 | **Unit Tests** | ✅ 24/24 Pass | Full security & validation coverage |
 | **Phase 3 Roadmap** | 📋 Planned | Swag store, gallery expansion, SEO, wiki, chatbot |
 
-**See:** [BUGFIX_IMPLEMENTATION.md](BUGFIX_IMPLEMENTATION.md) | [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) | [GOOGLE_PLACES_API_SETUP.md](GOOGLE_PLACES_API_SETUP.md)
+**See:** [BUGFIX_1.md](BUGFIX_1.md) (forms, reviews, blog scheduler, deploy + API setup) | [PHASE3_ROADMAP.md](PHASE3_ROADMAP.md) (Phase 3 plan)
 
 ---
 

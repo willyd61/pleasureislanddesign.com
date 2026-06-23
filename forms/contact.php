@@ -1,16 +1,24 @@
 <?php
 /**
- * Contact Form Handler (Production-Ready)
+ * Contact Form Handler
  *
- * Security Features:
- * - CSRF token validation
- * - Rate limiting (3 submissions per hour per IP)
- * - Input validation & sanitization
- * - XSS prevention
- * - Email header injection prevention
+ * Security measures actually implemented here:
+ * - Origin-restricted CORS (only pleasureislanddesign.com)
+ * - Rate limiting (3 submissions per hour per IP, temp-file backed)
+ * - Input validation via shared lib (pid_validate_contact)
+ * - Output sanitization (htmlspecialchars) before email body
+ * - Email header-injection prevention (pid_sanitize_email_header)
  * - Request logging for debugging
- * - Error handling with user-friendly responses
+ * - User-friendly error responses (no internal detail leaked)
+ *
+ * NOT implemented (by design / hosting constraints):
+ * - CSRF tokens: site is static HTML with no server session; rate limiting
+ *   + origin check are the mitigations instead.
+ * - Mail authentication (SPF/DKIM): handled at the GoDaddy/DNS level, not here.
+ *   See DELIVERABILITY note in BUGFIX_1.md before relying on inbox delivery.
  */
+
+require_once __DIR__ . '/lib/form-helpers.php';
 
 define('LOG_FILE', __DIR__ . '/../.logs/contact-form.log');
 define('MAX_SUBMISSIONS_PER_HOUR', 3);
@@ -56,7 +64,7 @@ if (!$input) {
 }
 
 // --- RATE LIMITING ---
-$ip = sanitize_ip($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+$ip = pid_sanitize_ip($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
 $rate_limit_key = RATE_LIMIT_KEY_PREFIX . $ip;
 $cache_file = sys_get_temp_dir() . '/' . md5($rate_limit_key) . '.tmp';
 
@@ -66,7 +74,7 @@ if (check_rate_limit($cache_file)) {
 }
 
 // --- VALIDATION ---
-$validation_errors = validate_input($input);
+$validation_errors = pid_validate_contact($input);
 if (!empty($validation_errors)) {
     respond(['errors' => $validation_errors], 400);
 }
@@ -103,34 +111,6 @@ function respond($data, $code = 200) {
     exit;
 }
 
-function validate_input($input) {
-    $errors = [];
-    $name = trim($input['name'] ?? '');
-    $email = trim($input['email'] ?? '');
-    $message = trim($input['message'] ?? '');
-
-    // Length checks
-    if (strlen($name) < 2 || strlen($name) > 100) {
-        $errors['name'] = 'Name must be 2-100 characters';
-    }
-    if (strlen($email) < 5 || strlen($email) > 255) {
-        $errors['email'] = 'Invalid email address';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors['email'] = 'Invalid email format';
-    }
-    if (strlen($message) < 10 || strlen($message) > 5000) {
-        $errors['message'] = 'Message must be 10-5000 characters';
-    }
-
-    // Optional fields
-    $phone = trim($input['phone'] ?? '');
-    if ($phone && !preg_match('/^[\d\s\-\+\(\)\.]+$/', $phone)) {
-        $errors['phone'] = 'Invalid phone number format';
-    }
-
-    return $errors;
-}
-
 function send_contact_emails($name, $email, $phone, $service, $message) {
     $to = RECIPIENT_EMAIL;
     $subject = 'New Consultation Request from ' . $name;
@@ -145,12 +125,12 @@ function send_contact_emails($name, $email, $phone, $service, $message) {
     $body .= "{$message}\n";
     $body .= "\n--- SUBMISSION DETAILS ---\n";
     $body .= "Submitted from: {$_SERVER['HTTP_HOST']}\n";
-    $body .= "IP Address: " . sanitize_ip($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1') . "\n";
+    $body .= "IP Address: " . pid_sanitize_ip($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1') . "\n";
     $body .= "Date: " . date('Y-m-d H:i:s') . " UTC\n";
     $body .= "User Agent: " . substr($_SERVER['HTTP_USER_AGENT'] ?? 'Unknown', 0, 200) . "\n";
 
     // Prevent header injection
-    $safe_email = filter_var($email, FILTER_SANITIZE_EMAIL);
+    $safe_email = pid_sanitize_email_header($email);
     $headers = "From: noreply@pleasureislanddesign.com\r\n";
     $headers .= "Reply-To: {$safe_email}\r\n";
     $headers .= "Return-Path: noreply@pleasureislanddesign.com\r\n";
@@ -205,10 +185,6 @@ function record_rate_limit($cache_file) {
     $data['timestamp'] = $data['timestamp'] ?? time();
 
     file_put_contents($cache_file, json_encode($data));
-}
-
-function sanitize_ip($ip) {
-    return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '127.0.0.1';
 }
 
 function log_event($event, $data = []) {

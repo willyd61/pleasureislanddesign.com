@@ -11,6 +11,8 @@
  * - Error handling
  */
 
+require_once __DIR__ . '/lib/form-helpers.php';
+
 define('LOG_FILE', __DIR__ . '/../.logs/newsletter.log');
 define('SUBSCRIBERS_FILE', __DIR__ . '/../.data/newsletter-subscribers.jsonl');
 define('MAX_SIGNUPS_PER_HOUR', 5);
@@ -55,7 +57,7 @@ if (!$input) {
 }
 
 // --- RATE LIMITING ---
-$ip = sanitize_ip($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+$ip = pid_sanitize_ip($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
 $rate_limit_key = RATE_LIMIT_KEY_PREFIX . $ip;
 $cache_file = sys_get_temp_dir() . '/' . md5($rate_limit_key) . '.tmp';
 
@@ -71,11 +73,11 @@ if (strlen($email) < 5 || strlen($email) > 255) {
     respond(['error' => 'Invalid email address'], 400);
 }
 
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+if (!pid_validate_email($email)) {
     respond(['error' => 'Please enter a valid email address'], 400);
 }
 
-$email = filter_var($email, FILTER_SANITIZE_EMAIL);
+$email = pid_sanitize_email_header($email);
 
 // --- DUPLICATE CHECK ---
 if (is_duplicate_subscriber($email)) {
@@ -120,7 +122,7 @@ function is_duplicate_subscriber($email) {
     $file = fopen(SUBSCRIBERS_FILE, 'r');
     while (($line = fgets($file)) !== false) {
         $data = json_decode($line, true);
-        if ($data && strtolower($data['email'] ?? '') === strtolower($email)) {
+        if ($data && pid_is_duplicate_email($email, [$data['email'] ?? ''])) {
             fclose($file);
             return true;
         }
@@ -133,7 +135,7 @@ function record_subscriber($email) {
     $entry = [
         'email' => $email,
         'subscribed_at' => date('Y-m-d H:i:s'),
-        'ip' => sanitize_ip($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'),
+        'ip' => pid_sanitize_ip($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'),
         'user_agent' => substr($_SERVER['HTTP_USER_AGENT'] ?? 'Unknown', 0, 200)
     ];
     $line = json_encode($entry) . "\n";
@@ -147,7 +149,7 @@ function send_newsletter_emails($email) {
     $body = "New newsletter signup:\n\n";
     $body .= "Email: {$email}\n";
     $body .= "Timestamp: " . date('Y-m-d H:i:s') . " UTC\n";
-    $body .= "IP: " . sanitize_ip($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1') . "\n";
+    $body .= "IP: " . pid_sanitize_ip($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1') . "\n";
 
     $headers = "From: noreply@pleasureislanddesign.com\r\n";
     $headers .= "Return-Path: noreply@pleasureislanddesign.com\r\n";
@@ -204,10 +206,6 @@ function record_rate_limit($cache_file) {
     $data['count'] = ($data['count'] ?? 0) + 1;
     $data['timestamp'] = $data['timestamp'] ?? time();
     file_put_contents($cache_file, json_encode($data));
-}
-
-function sanitize_ip($ip) {
-    return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '127.0.0.1';
 }
 
 function log_event($event, $data = []) {

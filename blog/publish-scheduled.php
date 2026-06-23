@@ -14,6 +14,8 @@
  *   Cron: 0 0 * * * php /path/to/blog/publish-scheduled.php
  */
 
+require_once dirname(__DIR__) . '/forms/lib/form-helpers.php';
+
 define('BLOG_ROOT', __DIR__);
 define('CONFIG_FILE', BLOG_ROOT . '/scheduled-posts.json');
 define('DRAFTS_DIR', BLOG_ROOT . '/drafts');
@@ -71,8 +73,8 @@ foreach ($config['posts'] as $post) {
         continue;
     }
 
-    $draft_file = DRAFTS_DIR . '/' . sanitize_slug($slug) . '.html';
-    $live_file = BLOG_ROOT . '/' . sanitize_slug($slug) . '.html';
+    $draft_file = DRAFTS_DIR . '/' . pid_sanitize_slug($slug) . '.html';
+    $live_file = BLOG_ROOT . '/' . pid_sanitize_slug($slug) . '.html';
 
     // Check if already published
     if (file_exists($live_file)) {
@@ -92,7 +94,7 @@ foreach ($config['posts'] as $post) {
 
     // Validate HTML
     $content = file_get_contents($draft_file);
-    if (!validate_post_html($content)) {
+    if (!pid_validate_post_html($content)) {
         echo "[ERROR] Invalid HTML in draft: {$draft_file}\n";
         $errors[] = "Invalid HTML in '{$title}'";
         $stats['errors']++;
@@ -101,7 +103,7 @@ foreach ($config['posts'] as $post) {
     }
 
     // Backup before publishing
-    $backup_file = BACKUP_DIR . '/' . sanitize_slug($slug) . '_' . date('YmdHis') . '.html.bak';
+    $backup_file = BACKUP_DIR . '/' . pid_sanitize_slug($slug) . '_' . date('YmdHis') . '.html.bak';
     copy($draft_file, $backup_file);
 
     // Move to live
@@ -161,25 +163,6 @@ log_event('PUBLISHER_END', $stats);
 exit($stats['errors'] > 0 ? 1 : 0);
 
 // ===== HELPER FUNCTIONS =====
-
-function sanitize_slug($slug) {
-    return preg_replace('/[^a-z0-9\-]/i', '', $slug);
-}
-
-function validate_post_html($content) {
-    // Check for required elements
-    if (!preg_match('/<h1[^>]*>/', $content)) {
-        return false;
-    }
-    if (!preg_match('/<article|<main/', $content)) {
-        // Allow posts without article wrapper
-    }
-    // Basic HTML validation
-    if (substr_count($content, '<') !== substr_count($content, '>')) {
-        return false;
-    }
-    return true;
-}
 
 function regenerate_blog_index() {
     $blog_dir = BLOG_ROOT;

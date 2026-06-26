@@ -37,7 +37,7 @@ log_event('PUBLISHER_START');
 
 // Load config
 if (!file_exists(CONFIG_FILE)) {
-    echo "[ERROR] Config not found: $CONFIG_FILE\n";
+    echo "[ERROR] Config not found: " . CONFIG_FILE . "\n";
     log_event('CONFIG_NOT_FOUND', ['file' => CONFIG_FILE]);
     exit(1);
 }
@@ -49,7 +49,7 @@ if (!$config || !isset($config['posts'])) {
     exit(1);
 }
 
-$today = date('Y-m-d');
+$today = gmdate('Y-m-d');
 $published_posts = [];
 $errors = [];
 
@@ -215,7 +215,28 @@ function regenerate_blog_index() {
         return strcmp($b['date'], $a['date']);
     });
 
-    return true; // Success (don't overwrite index, just validate)
+    // Build index HTML
+    $html = "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n";
+    $html .= "  <meta charset=\"UTF-8\">\n";
+    $html .= "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n";
+    $html .= "  <title>Pleasure Island Design - Blog Posts</title>\n";
+    $html .= "</head>\n<body>\n<h1>Blog Posts</h1>\n<ul>\n";
+
+    foreach ($posts as $post) {
+        $url = htmlspecialchars($post['file']);
+        $title = htmlspecialchars($post['title']);
+        $date = htmlspecialchars($post['date']);
+        $html .= "  <li><a href=\"{$url}\">{$title}</a> <time>{$date}</time></li>\n";
+    }
+
+    $html .= "</ul>\n</body>\n</html>\n";
+
+    // Write index file
+    if (file_put_contents($index_file, $html) === false) {
+        return false;
+    }
+
+    return true;
 }
 
 function regenerate_sitemap() {

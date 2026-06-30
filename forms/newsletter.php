@@ -88,12 +88,17 @@ if (is_duplicate_subscriber($email)) {
     ], 200);
 }
 
-// --- SEND EMAILS & RECORD ---
-$success = send_newsletter_emails($email);
+// --- RECORD SUBSCRIBER FIRST (durable capture, independent of mail delivery) ---
+// The point of a signup is capturing the address; the notification email is secondary.
+// On shared hosting mail() can return false for valid input, so success must not
+// depend on it — otherwise we'd reject and lose a legitimate subscriber.
+$recorded = record_subscriber($email);
 
-if ($success) {
-    record_subscriber($email);
-    log_event('NEWSLETTER_SIGNUP', ['email' => $email]);
+// --- SEND EMAILS (best-effort) ---
+$mail_sent = send_newsletter_emails($email);
+
+if ($recorded || $mail_sent) {
+    log_event('NEWSLETTER_SIGNUP', ['email' => $email, 'mail_sent' => $mail_sent, 'recorded' => $recorded]);
     record_rate_limit($cache_file);
     respond([
         'success' => true,
@@ -139,7 +144,7 @@ function record_subscriber($email) {
         'user_agent' => substr($_SERVER['HTTP_USER_AGENT'] ?? 'Unknown', 0, 200)
     ];
     $line = json_encode($entry) . "\n";
-    @file_put_contents(SUBSCRIBERS_FILE, $line, FILE_APPEND | LOCK_EX);
+    return @file_put_contents(SUBSCRIBERS_FILE, $line, FILE_APPEND | LOCK_EX) !== false;
 }
 
 function send_newsletter_emails($email) {

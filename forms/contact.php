@@ -21,13 +21,16 @@
 require_once __DIR__ . '/lib/form-helpers.php';
 
 define('LOG_FILE', __DIR__ . '/../.logs/contact-form.log');
+define('SUBMISSIONS_FILE', __DIR__ . '/../.data/contact-submissions.jsonl');
 define('MAX_SUBMISSIONS_PER_HOUR', 3);
 define('RATE_LIMIT_KEY_PREFIX', 'pid_contact_');
 define('RECIPIENT_EMAIL', 'pleasureislanddesign@gmail.com');
 
-// Ensure log directory exists
-if (!is_dir(dirname(LOG_FILE))) {
-    @mkdir(dirname(LOG_FILE), 0755, true);
+// Ensure log + data directories exist
+foreach ([dirname(LOG_FILE), dirname(SUBMISSIONS_FILE)] as $dir) {
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+    }
 }
 
 // Set headers
@@ -86,18 +89,28 @@ $phone = htmlspecialchars($input['phone'] ?? '', ENT_QUOTES, 'UTF-8');
 $service = htmlspecialchars($input['service'] ?? '', ENT_QUOTES, 'UTF-8');
 $message = htmlspecialchars($input['message'] ?? '', ENT_QUOTES, 'UTF-8');
 
-// --- SEND EMAILS ---
-$success = send_contact_emails($name, $email, $phone, $service, $message);
+// --- PERSIST LEAD FIRST (durable capture, independent of mail delivery) ---
+// On shared hosting mail() can return false even for valid submissions; capturing
+// the lead to disk first guarantees we never silently drop a consultation request.
+$lead_captured = record_contact_submission($name, $email, $phone, $service, $message);
 
-if ($success) {
-    log_event('CONTACT_FORM_SUBMITTED', ['email' => $email, 'name' => $name]);
+// --- SEND EMAILS (best-effort) ---
+$mail_sent = send_contact_emails($name, $email, $phone, $service, $message);
+
+if ($lead_captured || $mail_sent) {
+    log_event('CONTACT_FORM_SUBMITTED', [
+        'email' => $email,
+        'name' => $name,
+        'mail_sent' => $mail_sent,
+        'lead_captured' => $lead_captured
+    ]);
     record_rate_limit($cache_file);
     respond([
         'success' => true,
         'message' => 'Thank you! We\'ll be in touch within 1-2 business days.'
     ], 200);
 } else {
-    log_event('CONTACT_FORM_FAILED', ['email' => $email, 'error' => 'Mail send failed']);
+    log_event('CONTACT_FORM_FAILED', ['email' => $email, 'error' => 'Mail send and lead capture both failed']);
     respond([
         'error' => 'Unable to send message. Please call (910) 444-1230 or email directly.'
     ], 500);
@@ -109,6 +122,24 @@ function respond($data, $code = 200) {
     http_response_code($code);
     echo json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
+}
+
+/**
+ * Durably append a consultation request to disk so leads survive mail() failures.
+ * Returns true when the line was written.
+ */
+function record_contact_submission($name, $email, $phone, $service, $message) {
+    $entry = [
+        'name' => $name,
+        'email' => $email,
+        'phone' => $phone,
+        'service' => $service,
+        'message' => $message,
+        'submitted_at' => date('Y-m-d H:i:s'),
+        'ip' => pid_sanitize_ip($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'),
+    ];
+    $line = json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
+    return @file_put_contents(SUBMISSIONS_FILE, $line, FILE_APPEND | LOCK_EX) !== false;
 }
 
 function send_contact_emails($name, $email, $phone, $service, $message) {

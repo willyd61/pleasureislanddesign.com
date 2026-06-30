@@ -151,7 +151,14 @@ function fetch_google_reviews($api_key, $place_id) {
 function format_reviews($reviews) {
     $formatted = [];
 
-    foreach (array_slice($reviews, 0, 6) as $review) {
+    foreach ($reviews as $review) {
+        // Only surface authentic 5-star reviews (highest-rated social proof).
+        if ((int)($review['rating'] ?? 0) < 5) {
+            continue;
+        }
+        if (trim($review['text'] ?? '') === '') {
+            continue; // skip ratings with no written review
+        }
         $formatted[] = [
             'name' => $review['author_name'] ?? 'Anonymous',
             'rating' => $review['rating'] ?? 5,
@@ -160,6 +167,9 @@ function format_reviews($reviews) {
             'author_url' => $review['author_url'] ?? null,
             'profile_photo_url' => $review['profile_photo_url'] ?? null
         ];
+        if (count($formatted) >= 6) {
+            break; // cap at six cards for the carousel
+        }
     }
 
     return $formatted;

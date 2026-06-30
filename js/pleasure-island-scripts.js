@@ -15,6 +15,15 @@
     return Math.min(Math.max(value, min), max);
   }
 
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  // Shared so the carousel can be safely re-initialised after live reviews load.
+  let carouselAutoTimer = null;
+
   /* ================================================================
      HEADER: Scroll shadow + active nav highlighting
      ================================================================ */
@@ -277,7 +286,11 @@
     if (!cards.length) {return;}
 
     let current = 0;
-    let autoTimer;
+
+    // Reset any prior state so this can run again after live reviews replace the cards.
+    clearInterval(carouselAutoTimer);
+    if (dotsContainer) {dotsContainer.innerHTML = '';}
+    track.style.transform = '';
 
     // Build dots
     cards.forEach((_, i) => {
@@ -299,8 +312,8 @@
     }
 
     function resetAuto() {
-      clearInterval(autoTimer);
-      autoTimer = setInterval(() => goTo(current + 1), 5000);
+      clearInterval(carouselAutoTimer);
+      carouselAutoTimer = setInterval(() => goTo(current + 1), 5000);
     }
 
     prevBtn && prevBtn.addEventListener('click', () => goTo(current - 1));
@@ -316,6 +329,55 @@
     }
 
     resetAuto();
+  }
+
+  /* ================================================================
+     LIVE GOOGLE REVIEWS
+     Replaces the curated fallback cards with authentic 5-star Google
+     reviews when forms/get-reviews.php is configured with an API key +
+     Place ID. If the API is not configured or the request fails, the
+     hand-curated cards already in the markup remain untouched.
+     ================================================================ */
+  function buildReviewCard(review) {
+    const name = escapeHtml(review.name || 'Anonymous');
+    const text = escapeHtml(review.text || '');
+    const meta = escapeHtml(review.time || 'Recently');
+    const initials = escapeHtml(
+      String(review.name || 'A').split(/\s+/).filter(Boolean)
+        .slice(0, 2).map(w => w.charAt(0).toUpperCase()).join('') || 'A'
+    );
+    return `<article class="testimonial-card" aria-label="Review from ${name}">
+      <div class="testimonial-stars" aria-label="5 stars">★★★★★</div>
+      <blockquote><p>"${text}"</p></blockquote>
+      <footer class="testimonial-author">
+        <div class="author-avatar" aria-hidden="true">${initials}</div>
+        <div>
+          <strong class="author-name">${name}</strong>
+          <span class="author-location">${meta}</span>
+        </div>
+      </footer>
+    </article>`;
+  }
+
+  function initGoogleReviews() {
+    const track = document.getElementById('testimonials-track');
+    if (!track) {return;}
+
+    fetch('/forms/get-reviews.php', { headers: { Accept: 'application/json' } })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!data || data.success !== true || !Array.isArray(data.reviews)) {
+          return; // not configured / fetch failed → keep curated fallback cards
+        }
+        const fiveStar = data.reviews.filter(
+          r => Number(r.rating) >= 5 && String(r.text || '').trim() !== ''
+        );
+        if (!fiveStar.length) {return;}
+
+        track.innerHTML = fiveStar.map(buildReviewCard).join('');
+        initCarousel(); // re-bind carousel + dots to the freshly rendered cards
+      })
+      .catch(() => { /* keep curated fallback cards */ });
   }
 
   /* ================================================================
@@ -576,6 +638,7 @@
     initGalleryFilter();
     initBeforeAfterSliders();
     initCarousel();
+    initGoogleReviews();
     initLightbox();
     initContactForm();
     initNewsletterForm();
